@@ -21,18 +21,21 @@ npm run dev
 ## Roadmap
 
 ### Fase 1 - MVP
+
 - ✅ Configuración inicial del proyecto
 - ✅ Formulario básico de transacciones
-- 🔄 Integración con API de precios
 - ✅ Almacenamiento local de transacciones
+- 🔄 Integración con API de precios
 
 ### Fase 2 - Mejoras
+
 - Autenticación de usuarios
 - Sincronización en la nube
 - Gráficos de rendimiento
 - Notificaciones de precios
 
 ### Fase 3 - Características Avanzadas
+
 - Integración con wallets
 - Reportes exportables
 - Análisis predictivo
