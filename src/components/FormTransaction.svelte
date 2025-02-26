@@ -1,10 +1,42 @@
 <script lang="ts">
   import { transactions } from '../stores/transactions';
   import type { Transaction } from '../types/transaction';
+  import { onMount } from 'svelte';
 
-  let crypto: 'BTC' | 'ETH' | 'SOL' = 'BTC';
+  let prices: { bitcoin: { usd: number }; ethereum: { usd: number }; solana: { usd: number } } = {
+    bitcoin: {
+      usd: 0,
+    },
+    ethereum: {
+      usd: 0,
+    },
+    solana: {
+      usd: 0,
+    },
+  };
+
+  async function fetchCryptoPrices() {
+    try {
+      const response = await fetch('http://localhost:3000/crypto-prices');
+      prices = await response.json();
+    } catch (error) {
+      console.error('Error fetching crypto prices:', error);
+    }
+  }
+
+  onMount(() => {
+    fetchCryptoPrices(); // Cargar precios al inicio
+
+    // Actualizar precios cada 5 minutos
+    setInterval(fetchCryptoPrices, 300000);
+  });
+
+  console.log(prices, 'prices');
+
+  let crypto: 'bitcoin' | 'ethereum' | 'solana' = 'bitcoin';
   let amount = '';
-  let price = '';
+  let price: number | '' = '';
+  $: price = prices[crypto]?.usd !== undefined ? Number(amount) * prices[crypto].usd : '';
 
   function handleSubmit() {
     const transaction: Transaction = {
@@ -28,15 +60,15 @@
   on:submit|preventDefault={handleSubmit}
 >
   <div class="mb-4">
-    <label for="crypto" class="block mb-2 font-medium">Criptomoneda</label>
+    <label for="crypto" class="block mb-2 font-medium text-black">Criptomoneda</label>
     <select id="crypto" class="w-full p-2 border rounded" bind:value={crypto}>
-      <option value="BTC">Bitcoin (BTC)</option>
-      <option value="ETH">Ethereum (ETH)</option>
-      <option value="SOL">Solana (SOL)</option>
+      <option value="bitcoin">Bitcoin (BTC)</option>
+      <option value="ethereum">Ethereum (ETH)</option>
+      <option value="solana">Solana (SOL)</option>
     </select>
   </div>
   <div class="mb-4">
-    <label for="amount" class="block mb-2 font-medium">Cantidad</label>
+    <label for="amount" class="block mb-2 font-medium text-black">Cantidad</label>
     <input
       id="amount"
       type="number"
@@ -50,16 +82,15 @@
   </div>
 
   <div class="mb-4">
-    <label for="price" class="block mb-2 font-medium">Precio de compra (USD)</label>
+    <label for="price" class="block mb-2 font-medium text-black">Precio de compra (USD)</label>
     <input
       id="price"
       type="number"
       class="w-full p-2 border rounded"
-      placeholder="Ej: 45000"
       bind:value={price}
       step="0.01"
       min="0"
-      required
+      readonly
     />
   </div>
 
