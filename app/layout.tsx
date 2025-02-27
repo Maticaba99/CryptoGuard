@@ -1,12 +1,41 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
+import "./globals.css";
+import type { Metadata } from "next";
+import { Space_Grotesk, Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const inter = Inter({ subsets: ['latin'] });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
-  title: 'CryptoGuard',
-  description: 'Track and manage your crypto investments',
+  title: "CryptoGuard AI - Secure Your Digital Assets",
+  description:
+    "Advanced AI-powered security for your cryptocurrency investments with real-time monitoring and personalized coaching.",
+  keywords:
+    "cryptocurrency security, AI security, crypto protection, blockchain security",
+  openGraph: {
+    title: "CryptoGuard AI - Secure Your Digital Assets",
+    description:
+      "Advanced AI-powered security for your cryptocurrency investments with real-time monitoring and personalized coaching.",
+    url: "https://cryptoguard.ai",
+    siteName: "CryptoGuard AI",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "CryptoGuard AI",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -15,9 +44,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div id="app">{children}</div>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${spaceGrotesk.variable} ${inter.variable} font-body`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
