@@ -26,18 +26,9 @@ export default function LoginPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { user, csrfToken } = useSelector((state: RootState) => state.auth);
 
-  useEffect(() => {
-    let mounted = true;
-    if (!csrfToken && mounted) {
-      dispatch(fetchCsrfToken());
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch]);
-
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [csrfFetched, setCsrfFetched] = useState(false);
 
   const {
     handleSubmit,
@@ -69,8 +60,6 @@ export default function LoginPage() {
       if (data.email && data.password) {
         // Despacha la acción login con las credenciales
         await dispatch(login({ email: data.email, password: data.password }));
-        console.log("entro aca dispara dashboard");
-        router.replace("/dashboard"); // Redirige al dashboard tras éxito
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -101,11 +90,18 @@ export default function LoginPage() {
     }
   };
 
-  // Si ya hay usuario logueado, redirige al dashboard
-  if (user) {
-    router.replace("/dashboard"); // Evita volver atrás a /login
-    return null;
-  }
+  useEffect(() => {
+    if (!csrfToken && !csrfFetched) {
+      dispatch(fetchCsrfToken());
+      setCsrfFetched(true); // Marcamos que ya fetcheamos
+    }
+  }, [dispatch, csrfToken, csrfFetched]);
+
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   return (
     <AuthLayout

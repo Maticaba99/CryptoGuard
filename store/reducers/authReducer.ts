@@ -20,6 +20,8 @@ export enum AuthActionTypes {
   SET_TOKENS = "SET_TOKENS",
   FETCH_CSRF_TOKEN = "FETCH_CSRF_TOKEN",
   REFRESH_TOKEN = "REFRESH_TOKEN",
+  LOGOUT_SUCCESS = "LOGOUT_SUCCESS",
+  LOGOUT_COMPLETE = "LOGOUT_COMPLETE",
 }
 
 interface AuthLoginAction extends Action {
@@ -45,11 +47,21 @@ interface AuthRefreshTokenAction extends Action {
   type: AuthActionTypes.REFRESH_TOKEN;
 }
 
+interface AuthLogoutSuccessAction extends Action {
+  type: AuthActionTypes.LOGOUT_SUCCESS;
+}
+
+interface AuthLogoutCompleteAction extends Action {
+  type: AuthActionTypes.LOGOUT_COMPLETE;
+}
+
 export type AuthActions =
   | AuthLoginAction
   | AuthLogoutAction
   | AuthSetTokensAction
-  | AuthRefreshTokenAction;
+  | AuthRefreshTokenAction
+  | AuthLogoutSuccessAction
+  | AuthLogoutCompleteAction;
 
 export const authReducer = (
   state = initialState,
@@ -73,6 +85,10 @@ export const authReducer = (
         accessToken: action.payload.accessToken,
         refreshToken: action.payload.refreshToken,
       };
+    case AuthActionTypes.LOGOUT_SUCCESS:
+      return state;
+    case AuthActionTypes.LOGOUT_COMPLETE:
+      return state;
     default:
       return state;
   }

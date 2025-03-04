@@ -4,8 +4,6 @@ export async function POST(req: NextRequest) {
   const csrfToken = req.headers.get("x-csrf-token") as string;
   const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
   const cookies = req.cookies.getAll();
-  console.log("csrfToken API REFRESH", csrfToken);
-  console.log("Cookies in Refresh Request:", cookies);
   try {
     const cookieHeader = cookies
       .map((cookie) => `${cookie.name}=${cookie.value}`)
@@ -16,8 +14,6 @@ export async function POST(req: NextRequest) {
       headers: { "X-CSRF-Token": csrfToken, Cookie: cookieHeader },
       credentials: "include",
     });
-
-    console.log("response refresh", response);
 
     if (!response.ok) throw new Error("Refresh failed");
 

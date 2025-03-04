@@ -1,7 +1,7 @@
 import { put, takeEvery, call, select, take } from "redux-saga/effects";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { AuthActionTypes, AuthState } from "../reducers/authReducer";
-import { setTokens, logout } from "../actions/authActions";
+import { setTokens, logout, fetchCsrfToken } from "../actions/authActions";
 import { Action } from "redux";
 import type { RootState } from "../index";
 
@@ -62,7 +62,6 @@ function* loginSaga(action: LoginAction): GeneratorType {
 
     if (response.status === 200) {
       const { message } = response.data;
-      console.log("Login Response Message:", message);
       yield put({
         type: AuthActionTypes.LOGIN,
         payload: {
@@ -86,10 +85,8 @@ function* refreshTokenSaga(): GeneratorType {
   try {
     const state: RootState = yield select();
     let { csrfToken }: AuthState = state.auth;
-    console.log("csrfToken refreshSaga", csrfToken);
 
     if (!csrfToken) {
-      console.log("CSRF Token missing before refresh, fetching...");
       yield put({ type: AuthActionTypes.FETCH_CSRF_TOKEN });
       yield take(AuthActionTypes.SET_TOKENS);
       const updatedState: RootState = yield select();
@@ -108,9 +105,6 @@ function* refreshTokenSaga(): GeneratorType {
       config
     );
     if (response.status === 200) {
-      const { message, csrfToken: newCsrfToken } = response.data;
-      console.log("Refresh successful, updating CSRF token", message);
-
       // Fetches a new CSRF token after refresh to ensure it's updated
       yield put({ type: AuthActionTypes.FETCH_CSRF_TOKEN });
       yield take(AuthActionTypes.SET_TOKENS);
@@ -121,8 +115,36 @@ function* refreshTokenSaga(): GeneratorType {
   }
 }
 
+function* logoutSaga(): GeneratorType {
+  try {
+    const state: RootState = yield select();
+
+    const response: AxiosResponse<FetchResponse> = yield call(() =>
+      axios.post("/api/auth/logout", {
+        withCredentials: true,
+      })
+    );
+
+    if (response.status === 200) {
+      document.cookie = "_csrf=; Max-Age=0; Path=/; SameSite=Strict";
+      yield put(logout());
+
+      // Fecthear un nuevo csrfToken y esperar a que se actualice en Redux
+      yield put(fetchCsrfToken());
+      yield take(AuthActionTypes.SET_TOKENS); // Esperar a que el csrfToken se actualice antes de continuar
+
+      // Notificar al componente que el logout está completo con un nuevo csrfToken
+      yield put({ type: AuthActionTypes.LOGOUT_COMPLETE }); // Nueva acción para indicar que el logout y el nuevo csrfToken están listos
+    }
+  } catch (error) {
+    console.error("Logout failed:", error);
+    yield put(logout()); // Still logout locally even if server request fails
+  }
+}
+
 export function* authSaga() {
   yield takeEvery(AuthActionTypes.FETCH_CSRF_TOKEN, fetchCsrfTokenSaga);
   yield takeEvery(AuthActionTypes.LOGIN, loginSaga);
-  yield takeEvery(AuthActionTypes.REFRESH_TOKEN, refreshTokenSaga); // Corrige el tipo
+  yield takeEvery(AuthActionTypes.REFRESH_TOKEN, refreshTokenSaga);
+  yield takeEvery(AuthActionTypes.LOGOUT, logoutSaga);
 }

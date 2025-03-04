@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import type { AppDispatch, RootState } from "@/store";
-import { refreshToken, setTokens } from "@/store/actions/authActions";
+import { refreshToken, setTokens, logout } from "@/store/actions/authActions";
 import Cookies from "js-cookie";
 
 export default function Dashboard() {
@@ -20,13 +20,15 @@ export default function Dashboard() {
   const [initialLoad, setInitialLoad] = useState(true);
 
   function handleRemove(id: string) {
-    console.log("Removing transaction", id);
     removeTransaction(id);
   }
 
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+
   useEffect(() => {
     const restoreAuth = () => {
-      console.log("Restoring auth from cookies...");
       const csrfToken = Cookies.get("_csrf")?.split("|")[0]; // Solo usamos _csrf, que no es HttpOnly
 
       if (csrfToken) {
@@ -46,7 +48,6 @@ export default function Dashboard() {
   }, [dispatch]);
 
   useEffect(() => {
-    console.log("user dentro de /dashboard/page.tsx", user);
     if (!user && !initialLoad) {
       router.push("/login");
     } else if (user && !initialLoad) {
@@ -54,12 +55,27 @@ export default function Dashboard() {
     }
   }, [user, dispatch, router, initialLoad]);
 
+  // Escuchar LOGOUT_SUCCESS para redirigir después de completar el logout
+  useEffect(() => {
+    if (!user) {
+      window.location.href = "/login";
+    }
+  }, [user, router]);
+
   if (!user && initialLoad) return <div>Loading...</div>; // Mostrar loading o null mientras restauramos
   return (
     <main className="max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">CryptoGuard 🚀</h1>
 
-      <h2 className="text-3xl font-bold mb-6">¡Bienvenido, {user?.email}!</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold">¡Bienvenido, {user?.email}!</h2>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+        >
+          Cerrar Sesión
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
