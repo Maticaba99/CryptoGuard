@@ -25,3 +25,29 @@ export const fetchCsrfToken = () => ({
 export const refreshToken = () => ({
   type: AuthActionTypes.REFRESH_TOKEN,
 });
+
+export const register = (credentials: {
+  username: string;
+  email: string;
+  password: string;
+}) => ({
+  type: AuthActionTypes.REGISTER,
+  payload: credentials,
+});
+
+export const registerSuccess = (data: {
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+  };
+}) => ({
+  type: AuthActionTypes.REGISTER_SUCCESS,
+  payload: data,
+});
+
+export const registerFailure = (message: string) => ({
+  type: AuthActionTypes.REGISTER_FAILURE,
+  payload: { message },
+});

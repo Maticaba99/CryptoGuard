@@ -1,13 +1,28 @@
 import { put, takeEvery, call, select, take } from "redux-saga/effects";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { AuthActionTypes, AuthState } from "../reducers/authReducer";
-import { setTokens, logout, fetchCsrfToken } from "../actions/authActions";
+import {
+  setTokens,
+  logout,
+  fetchCsrfToken,
+  registerSuccess,
+  registerFailure,
+} from "../actions/authActions";
 import { Action } from "redux";
 import type { RootState } from "../index";
 
 interface LoginAction extends Action {
   type: AuthActionTypes.LOGIN;
   payload: { email: string; password: string }; // Coincide con lo que envía authActions.ts
+}
+
+interface RegisterAction extends Action {
+  type: AuthActionTypes.REGISTER;
+  payload: {
+    username: string;
+    email: string;
+    password: string;
+  };
 }
 
 type GeneratorType = Generator<any, void, any>;
@@ -18,7 +33,12 @@ interface CsrfResponse {
 
 interface FetchResponse {
   message: string;
-  csrfToken: string;
+  csrfToken?: string;
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+  };
 }
 
 function* fetchCsrfTokenSaga(): GeneratorType {
@@ -142,9 +162,54 @@ function* logoutSaga(): GeneratorType {
   }
 }
 
+function* registerSaga(action: RegisterAction): GeneratorType {
+  try {
+    const { username, email, password } = action.payload;
+    let { csrfToken }: AuthState = yield select(
+      (state: RootState) => state.auth
+    );
+
+    if (!csrfToken) {
+      yield put({ type: AuthActionTypes.FETCH_CSRF_TOKEN });
+      yield take(AuthActionTypes.SET_TOKENS);
+      const updatedState: RootState = yield select((state: RootState) => state);
+      csrfToken = updatedState.auth.csrfToken;
+      if (!csrfToken) throw new Error("CSRF Token still missing after fetch");
+    }
+
+    const response: AxiosResponse<FetchResponse> = yield call(() =>
+      axios.post(
+        "/api/auth/register",
+        { username, email, password },
+        {
+          withCredentials: true,
+          headers: { "X-CSRF-Token": csrfToken as string },
+        }
+      )
+    );
+
+    if (response.status === 200 && response.data.user) {
+      yield put(
+        registerSuccess({
+          message: response.data.message,
+          user: response.data.user,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Registration failed:", error);
+    yield put(
+      registerFailure(
+        error instanceof Error ? error.message : "Registration failed"
+      )
+    );
+  }
+}
+
 export function* authSaga() {
   yield takeEvery(AuthActionTypes.FETCH_CSRF_TOKEN, fetchCsrfTokenSaga);
   yield takeEvery(AuthActionTypes.LOGIN, loginSaga);
   yield takeEvery(AuthActionTypes.REFRESH_TOKEN, refreshTokenSaga);
   yield takeEvery(AuthActionTypes.LOGOUT, logoutSaga);
+  yield takeEvery(AuthActionTypes.REGISTER, registerSaga);
 }

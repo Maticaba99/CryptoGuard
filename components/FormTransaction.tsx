@@ -25,9 +25,9 @@ export default function FormTransaction() {
 
   async function fetchCryptoPrices() {
     try {
-      const response = await fetch("http://localhost:4000/crypto-prices");
-      const data = await response.json();
-      setPrices(data);
+      /*  const response = await fetch("http://localhost:4000/crypto-prices"); */
+      /* const data = await response.json(); */
+      /* setPrices(data); */
     } catch (error) {
       console.error("Error fetching crypto prices:", error);
     }

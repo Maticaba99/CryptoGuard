@@ -22,6 +22,9 @@ export enum AuthActionTypes {
   REFRESH_TOKEN = "REFRESH_TOKEN",
   LOGOUT_SUCCESS = "LOGOUT_SUCCESS",
   LOGOUT_COMPLETE = "LOGOUT_COMPLETE",
+  REGISTER = "REGISTER",
+  REGISTER_SUCCESS = "REGISTER_SUCCESS",
+  REGISTER_FAILURE = "REGISTER_FAILURE",
 }
 
 interface AuthLoginAction extends Action {
@@ -55,13 +58,44 @@ interface AuthLogoutCompleteAction extends Action {
   type: AuthActionTypes.LOGOUT_COMPLETE;
 }
 
+interface AuthRegisterAction extends Action {
+  type: AuthActionTypes.REGISTER;
+  payload: {
+    username: string;
+    email: string;
+    password: string;
+  };
+}
+
+interface AuthRegisterSuccessAction extends Action {
+  type: AuthActionTypes.REGISTER_SUCCESS;
+  payload: {
+    message: string;
+    user: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  };
+}
+
+interface AuthRegisterFailureAction extends Action {
+  type: AuthActionTypes.REGISTER_FAILURE;
+  payload: {
+    message: string;
+  };
+}
+
 export type AuthActions =
   | AuthLoginAction
   | AuthLogoutAction
   | AuthSetTokensAction
   | AuthRefreshTokenAction
   | AuthLogoutSuccessAction
-  | AuthLogoutCompleteAction;
+  | AuthLogoutCompleteAction
+  | AuthRegisterAction
+  | AuthRegisterSuccessAction
+  | AuthRegisterFailureAction;
 
 export const authReducer = (
   state = initialState,
@@ -88,6 +122,10 @@ export const authReducer = (
     case AuthActionTypes.LOGOUT_SUCCESS:
       return state;
     case AuthActionTypes.LOGOUT_COMPLETE:
+      return state;
+    case AuthActionTypes.REGISTER_SUCCESS:
+      return state;
+    case AuthActionTypes.REGISTER_FAILURE:
       return state;
     default:
       return state;
